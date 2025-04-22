@@ -1,6 +1,8 @@
 import React from 'react';
 import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 import {
   Alert,
   BackHandler,
@@ -243,7 +245,7 @@ class ListScreen extends React.Component {
         <FlatList
           style={styles.restaurantList}
           data={this.state.listData}
-          keyExtractor={(item) => item.key}
+          keyExtractor={(item, index) => item.key || `temp_${index}`}
           renderItem={({ item }) => (
             <View style={styles.restaurantContainer}>
                 <Text style={styles.restaurantName}>
@@ -296,7 +298,7 @@ class AddScreen extends React.Component {
       address: '',
       webSite: '',
       delivery: '',
-      key: `r_${new Date().getTime()}`,
+      key: uuidv4(),
       errors: {},
     };
   } /* End constructor. */

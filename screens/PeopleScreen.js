@@ -1,6 +1,8 @@
 import React from 'react';
 import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 import {
   Alert,
   BackHandler,
@@ -159,7 +161,7 @@ const styles = StyleSheet.create({
           <FlatList
             style={styles.personList}
             data={this.state.listData}
-            keyExtractor={(item) => item.key}
+            keyExtractor={(item, index) => item.key || `temp_${index}`}
             renderItem={({ item }) => (
               <View style={styles.personContainer}>
                 <Text style={styles.personName}>
@@ -196,48 +198,13 @@ class AddScreen extends React.Component {
       firstName: "",
       lastName: "",
       relationship: "",
-      key: `p_${new Date().getTime()}`,
+      key: uuidv4(),
       errors: {},
     };
   }
-
-  savePerson = async () => {
-    const { firstName, lastName, relationship, key } = this.state;
-    if (this.validateAllFields()) {
-        // Show the first error to the user
-        const firstErrorField = Object.keys(this.state.errors).find(
-          key => this.state.errors[key]
-        );
-        if (firstErrorField) {
-          Toast.show({
-            type: 'error',
-            position: 'bottom',
-            text1: 'Validation Error',
-            text2: this.state.errors[firstErrorField],
-            visibilityTime: 3000,
-          });
-        }
-        return;
-      }
-
-    if (!relationship) {
-      Alert.alert("Error", "Please fill all fields");
-      return;
-    }
-
-    try {
-      const people = await AsyncStorage.getItem("people");
-      const listData = people ? JSON.parse(people) : [];
-      listData.push(this.state);
-      await AsyncStorage.setItem("people", JSON.stringify(listData));
-      this.props.navigation.navigate("ListScreen");
-    } catch (error) {
-      console.error("Failed to save person:", error);
-    }
-  };
   validateName = (name) => {
     if (!name.trim()) {
-      return "Restaurant name is required";
+      return "Name is required";
     }
     if (name.length < 2) {
       return "Name must be at least 2 characters";
@@ -257,15 +224,54 @@ class AddScreen extends React.Component {
       }
     }));
   };
-  ValidateAllFields = () => {
-    const { firstName, lastName } = this.state;
+  validateAllFields = () => {
+    const { firstName, lastName, relationship } = this.state;
     const errors = {
       firstName: this.validateName(firstName),
       lastName: this.validateName(lastName),
+      relationship: !relationship ? "Relationship is required" : null,
     };
     this.setState({ errors });
   return Object.values(errors).some(error => error !== null);
-};
+  };
+  savePerson = async () => {
+    const { firstName, lastName, relationship, key } = this.state;
+    if (this.validateAllFields()) {
+        // Show the first error to the user
+        const firstErrorField = Object.keys(this.state.errors).find(
+          key => this.state.errors[key]
+        );
+        if (firstErrorField) {
+          Toast.show({
+            type: 'error',
+            position: 'bottom',
+            text1: 'Validation Error',
+            text2: this.state.errors[firstErrorField],
+            visibilityTime: 3000,
+          });
+        } else {
+                // Если ошибки есть, но firstErrorField не найден
+                Toast.show({
+                  type: 'error',
+                  position: 'bottom',
+                  text1: 'Validation Error',
+                  text2: 'Please check all fields',
+                  visibilityTime: 3000,
+                });
+        }
+        return;
+      }
+
+    try {
+      const people = await AsyncStorage.getItem("people");
+      const listData = people ? JSON.parse(people) : [];
+      listData.push(this.state);
+      await AsyncStorage.setItem("people", JSON.stringify(listData));
+      this.props.navigation.navigate("ListScreen");
+    } catch (error) {
+      console.error("Failed to save person:", error);
+    }
+  };
 
   render() {
     const { errors } = this.state;
@@ -280,16 +286,16 @@ class AddScreen extends React.Component {
                 stateHolder={this}
                 stateFieldName="firstName"
                 onChangeText={(text) => this.handleInputChange('firstName', text)}
-                error={errors.firstName}
               />
+              {errors.firstName && <Text style={{ color: 'red', marginLeft: 10, marginBottom: 10}}>{errors.name}</Text>}
               <CustomTextInput
                 label="Last Name"
                 maxLength={20}
                 stateHolder={this}
                 stateFieldName="lastName"
                 onChangeText={(text) => this.handleInputChange('lastName', text)}
-                error={errors.lastName}
               />
+              {errors.lastName && <Text style={{ color: 'red', marginLeft: 10, marginBottom: 10}}>{errors.name}</Text>}
               <Text style={styles.fieldLabel}>Relationship</Text>
               <View style={styles.pickerContainer}>
                 <Picker

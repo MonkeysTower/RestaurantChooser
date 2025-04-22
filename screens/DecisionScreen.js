@@ -471,21 +471,39 @@ class ChoiceScreen extends React.Component {
                           key={participant.key}
                           style={styles.vetoParticipantContainer}
                           onPress={() => {
-                            participant.vetoed = "yes";
+                            if (!chosenRestaurant) {
+                              console.error("No restaurant selected for veto.");
+                              return;
+                            }
+                          
                             const updatedRestaurants = filteredRestaurants.filter(
-                              (restaurant) =>
-                                restaurant && restaurant.key !== chosenRestaurant?.key
+                              (r) => r.key !== chosenRestaurant.key
                             );
-                            const vetoStillAvailable = participantsList.some(
-                              (p) => p && p.vetoed === "no"
+                          
+                            if (updatedRestaurants.length === 0) {
+                              Alert.alert(
+                                "No Restaurants Left",
+                                "There are no restaurants left to choose from.",
+                                [{ text: "OK" }]
+                              );
+                              return;
+                            }
+                          
+                            const updatedParticipants = participantsList.map((p) =>
+                              p.key === participant.key ? { ...p, vetoed: "yes" } : p
                             );
+                          
+                            const vetoStillAvailable = updatedParticipants.some((p) => p.vetoed === "no");
+                          
                             this.setState({
-                              selectedVisible: false,
-                              vetoVisible: false,
+                              participantsList: updatedParticipants,
+                              filteredRestaurants: updatedRestaurants,
                               vetoText: vetoStillAvailable ? "Veto" : "No Vetoes Left",
                               vetoDisabled: !vetoStillAvailable,
-                              filteredRestaurants: updatedRestaurants,
+                              selectedVisible: false,
+                              vetoVisible: false,
                             });
+                          
                             if (updatedRestaurants.length === 1) {
                               this.props.navigation.navigate("PostChoiceScreen", {
                                 chosenRestaurant: updatedRestaurants[0],
