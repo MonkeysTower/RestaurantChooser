@@ -29,7 +29,7 @@ Auto-Focus : Automatically focuses on the first invalid field upon submission at
 Submission Control : Prevents form submission until all fields are valid.
 Optimized Keyboard Types : Uses appropriate keyboard types (phone-pad, url, etc.) for better usability.
 
-## 📦 Tech Stack
+## Tech Stack
 
 - `React Native`  
 - `Expo`  
